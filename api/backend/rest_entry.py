@@ -8,6 +8,7 @@ from backend.db_connection import db
 from backend.simple.simple_routes import simple_routes
 from backend.ngos.ngo_routes import ngos
 from backend.jokes.jokes import jokes 
+from backend.veritas.veritas_routes import veritas_api
 
 def create_app():
     app = Flask(__name__)
@@ -49,6 +50,7 @@ def create_app():
     app.register_blueprint(simple_routes)
     app.register_blueprint(ngos, url_prefix="/ngo")
     app.register_blueprint(jokes, url_prefix="/jk")
+    app.register_blueprint(veritas_api, url_prefix="/vs")
 
     # Don't forget to return the app object
     return app

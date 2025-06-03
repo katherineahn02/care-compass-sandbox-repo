@@ -60,8 +60,9 @@ def AddNgoNav():
 def AdminPageNav():
     st.sidebar.page_link("pages/20_Admin_Home.py", label="System Admin", icon="🖥️")
     st.sidebar.page_link(
-        "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢"
-    )
+        "pages/21_ML_Model_Mgmt.py", label="ML Model Management", icon="🏢")
+    st.sidebar.page_link("pages/22_Suite_Contact.py", label="See Suite Contact Info")
+
 
 
 # --------------------------------Links Function -----------------------------------------------
@@ -80,7 +81,7 @@ def SideBarLinks(show_home=False):
 
     if show_home:
         # Show the Home page link (the landing page)
-        HomeNav()
+        HomeNav() # see func def above 
 
     # Show the other page navigators depending on the users' role.
     if st.session_state["authenticated"]:

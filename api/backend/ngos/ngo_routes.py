@@ -13,7 +13,7 @@ ngos = Blueprint("ngos", __name__)
 def get_all_ngos():
     try:
         current_app.logger.info('Starting get_all_ngos request')
-        cursor = db.get_db().cursor()
+        cursor = db.get_db().cursor() #get handle to database ... cursor helps database and python to communicate 
 
         # Note: Query parameters are added after the main part of the URL.
         # Here is an example:
@@ -28,7 +28,7 @@ def get_all_ngos():
         current_app.logger.debug(f'Query parameters - country: {country}, focus_area: {focus_area}, founding_year: {founding_year}')
 
         # Prepare the Base query
-        query = "SELECT * FROM WorldNGOs WHERE 1=1"
+        query = "SELECT * FROM WorldNGOs WHERE 1=1" #WHERE 1=1 clause so you can prime select statement; allows whatever set of query parameters, only adding an and
         params = []
 
         # Add filters if provided
@@ -43,8 +43,8 @@ def get_all_ngos():
             params.append(founding_year)
 
         current_app.logger.debug(f'Executing query: {query} with params: {params}')
-        cursor.execute(query, params)
-        ngos = cursor.fetchall()
+        cursor.execute(query, params) #execute select statement against datatbase 
+        ngos = cursor.fetchall() 
         cursor.close()
 
         current_app.logger.info(f'Successfully retrieved {len(ngos)} NGOs')
@@ -56,14 +56,14 @@ def get_all_ngos():
 
 # Get detailed information about a specific NGO including its projects and donors
 # Example: /ngo/ngos/1
-@ngos.route("/ngos/<int:ngo_id>", methods=["GET"])
+@ngos.route("/ngos/<int:ngo_id>", methods=["GET"]) #ngo_id in the route needs to be the same in parameter of function
 def get_ngo(ngo_id):
     try:
         cursor = db.get_db().cursor()
 
         # Get NGO details
-        cursor.execute("SELECT * FROM WorldNGOs WHERE NGO_ID = %s", (ngo_id,))
-        ngo = cursor.fetchone()
+        cursor.execute("SELECT * FROM WorldNGOs WHERE NGO_ID = %s", (ngo_id,)) 
+        ngo = cursor.fetchone() #returns first 
 
         if not ngo:
             return jsonify({"error": "NGO not found"}), 404
@@ -208,5 +208,48 @@ def get_ngo_donors(ngo_id):
         cursor.close()
 
         return jsonify(donors), 200
+    except Error as e:
+        return jsonify({"error": str(e)}), 500
+    
+# add a new donor for a particular NGO
+# Required fields:  Donor_ID, Donor_Name, Donor_Type, Donation_Amount, NGO_ID, 
+@ngos.route("/ngos/<int:ngo_id>/donors", methods=["POST"])
+def add_ngo_donor():
+    try:
+        data = request.json()
+        
+        # Validate required fields
+        required_fields = ["ID", "Name", "Donor_Type", "Donation_Amount", "NGO_ID"]
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+
+        cursor = db.get_db().cursor()
+
+        # Insert new NGO
+        query = """
+        INSERT INTO Donors (ID, Name, Donor_Type, Donation_Amount, NGO_ID)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(
+            query,
+            (
+                data["ID"],
+                data["Name"],
+                data["Donor_Type"],
+                data["Donation_Amount"],
+                data["NGO_ID"],
+            ),
+        )
+
+        db.get_db().commit()
+        new_donor_id = cursor.lastrowid
+        cursor.close()
+
+        return (
+            jsonify({"message": "Donor created successfully", "donor_id": new_donor_id}),
+            201,
+        )
+
     except Error as e:
         return jsonify({"error": str(e)}), 500
